@@ -1,0 +1,51 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Msvc.Info", "Msvc.Info\Msvc.Info.csproj", "{E8947646-EEEF-4BBD-8320-6668D30F05FB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "0 - version", "0 - version", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+		global.json = global.json
+		nuget.config = nuget.config
+		Version.props = Version.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1 - docs", "1 - docs", "{DF4CC356-32EE-4102-987D-8C9CE409C8A4}"
+	ProjectSection(SolutionItems) = preProject
+		.mcp.json = .mcp.json
+		CLAUDE.md = CLAUDE.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "mb", "mb", "{B7921993-A826-4111-B5E0-15E77E3C080E}"
+	ProjectSection(SolutionItems) = preProject
+		memory-bank\productContext.md = memory-bank\productContext.md
+		memory-bank\progress.md = memory-bank\progress.md
+		memory-bank\systemPatterns.md = memory-bank\systemPatterns.md
+		memory-bank\techContext.md = memory-bank\techContext.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E8947646-EEEF-4BBD-8320-6668D30F05FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8947646-EEEF-4BBD-8320-6668D30F05FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8947646-EEEF-4BBD-8320-6668D30F05FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8947646-EEEF-4BBD-8320-6668D30F05FB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B7921993-A826-4111-B5E0-15E77E3C080E} = {DF4CC356-32EE-4102-987D-8C9CE409C8A4}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1E75D6D9-52F5-4BFE-AC72-CBA9A168E882}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <BuildFor>net48</BuildFor>
+    <MainVersion>1.0.0</MainVersion>
+  </PropertyGroup>
+</Project> 
