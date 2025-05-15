@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35931.197 d17.13
+VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Msvc.Info", "Msvc.Info\Msvc.Info.csproj", "{E8947646-EEEF-4BBD-8320-6668D30F05FB}"
 EndProject
@@ -22,11 +22,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1 - docs", "1 - docs", "{DF
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "mb", "mb", "{B7921993-A826-4111-B5E0-15E77E3C080E}"
 	ProjectSection(SolutionItems) = preProject
+		memory-bank\activeContext.md = memory-bank\activeContext.md
 		memory-bank\productContext.md = memory-bank\productContext.md
 		memory-bank\progress.md = memory-bank\progress.md
 		memory-bank\systemPatterns.md = memory-bank\systemPatterns.md
 		memory-bank\techContext.md = memory-bank\techContext.md
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Msvc.Info.Tests", "Msvc.Info.Tests\Msvc.Info.Tests.csproj", "{4E10FE52-94E4-40B7-95DE-F82D76634C62}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Msvc.Info.Core", "Msvc.Info.Core\Msvc.Info.Core.csproj", "{C724641C-9C40-4F8F-B414-3C5CD210E8A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,6 +43,14 @@ Global
 		{E8947646-EEEF-4BBD-8320-6668D30F05FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E8947646-EEEF-4BBD-8320-6668D30F05FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E8947646-EEEF-4BBD-8320-6668D30F05FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E10FE52-94E4-40B7-95DE-F82D76634C62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E10FE52-94E4-40B7-95DE-F82D76634C62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E10FE52-94E4-40B7-95DE-F82D76634C62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E10FE52-94E4-40B7-95DE-F82D76634C62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C724641C-9C40-4F8F-B414-3C5CD210E8A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C724641C-9C40-4F8F-B414-3C5CD210E8A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C724641C-9C40-4F8F-B414-3C5CD210E8A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C724641C-9C40-4F8F-B414-3C5CD210E8A5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

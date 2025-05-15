@@ -1,9 +1,7 @@
-using System;
-using System.IO;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
+using System.Text.RegularExpressions;
 
-namespace Zerox.Msvc.Core.Services
+namespace Zerox.Info.Core.Services
 {
 
     /// <summary>
@@ -134,15 +132,15 @@ namespace Zerox.Msvc.Core.Services
         /// <exception cref="InvalidOperationException">Thrown when path processing fails</exception>
         public string? GetRelativePath(string? basePath, string? fullPath, PathFormat targetFormat = PathFormat.Windows)
         {
-            if (string.IsNullOrEmpty(basePath))
-            {
-                throw new ArgumentException("Base path cannot be null or empty", nameof(basePath));
-            }
+            //if (string.IsNullOrEmpty(basePath))
+            //{
+            //    throw new ArgumentException("Base path cannot be null or empty", nameof(basePath));
+            //}
             
-            if (string.IsNullOrEmpty(fullPath))
-            {
-                throw new ArgumentException("Full path cannot be null or empty", nameof(fullPath));
-            }
+            //if (string.IsNullOrEmpty(fullPath))
+            //{
+            //    throw new ArgumentException("Full path cannot be null or empty", nameof(fullPath));
+            //}
 
             // Detect formats if needed
             var basePathFormat = DetectPathFormat(basePath);
@@ -160,7 +158,7 @@ namespace Zerox.Msvc.Core.Services
                 : TranslatePath(fullPath, fullPathFormat, PathFormat.Windows);
 
             // Get the base directory
-            string? baseDir = Path.GetDirectoryName(windowsBasePath);
+            string? baseDir = !string.IsNullOrEmpty(windowsBasePath) ? Path.GetDirectoryName(windowsBasePath) : null;
             if (string.IsNullOrEmpty(baseDir))
             {
                 _logger.LogWarning($"Could not get directory name from base path: {windowsBasePath}");
