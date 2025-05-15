@@ -3,19 +3,29 @@
   <ItemGroup>
 
 
-    <PackageVersion Include="Microsoft.VisualStudio.Extensibility.Sdk" Version="17.9.2092" />
-    <PackageVersion Include="Microsoft.VisualStudio.Extensibility.Build" Version="17.9.2092" />
-    <PackageVersion Include="Microsoft.VisualStudio.SDK" Version="17.6.36389"  />
-    <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.VisualStudio.Extensibility.Sdk" Version="17.14.40254" />
+    <PackageVersion Include="Microsoft.VisualStudio.Extensibility.Build" Version="17.14.40254" />
+    <PackageVersion Include="Microsoft.VisualStudio.SDK" Version="17.14.40265"  />
+    <PackageVersion Include="Microsoft.VisualStudio.LanguageServices" Version="4.13.0" />
+    
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.5" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="9.0.5" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="9.0.5" />
 
+    <!-- Service Broker and JSON-RPC packages -->
+    <PackageVersion Include="Microsoft.ServiceHub.Framework" Version="4.8.55" />
+    <PackageVersion Include="StreamJsonRpc" Version="2.22.11" />
 
-    <PackageVersion Include="coverlet.collector" Version="6.0.0" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-    <PackageVersion Include="xunit" Version="2.5.3" />
+    <!-- CodeAnalysis packages for symbol finding -->
+    <PackageVersion Include="Microsoft.CodeAnalysis" Version="4.13.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Common"  Version="4.13.0"/>
+    
+
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="Moq" Version="4.20.72" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.0" />
     
   </ItemGroup>
 </Project>

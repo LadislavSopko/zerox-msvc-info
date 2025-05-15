@@ -1,0 +1,149 @@
+using Microsoft.ServiceHub.Framework;
+using Microsoft.VisualStudio.Shell.ServiceBroker;
+using System.Text.Json;
+
+namespace ExternalMCPClient
+{
+    /// <summary>
+    /// Example external client that connects to Visual Studio's MCP service
+    /// </summary>
+    public class ExternalMCPClient : IDisposable
+    {
+        private IServiceBroker? _serviceBroker;
+        private IDisposable? _serviceConnection;
+        private IMCPService? _mcpService;
+
+        /// <summary>
+        /// Connect to Visual Studio's MCP service
+        /// </summary>
+        public async Task ConnectAsync()
+        {
+            // Create service broker client (this would connect to VS)
+            // Note: In a real scenario, you'd need to establish the connection to VS first
+            _serviceBroker = await ServiceBroker.CreateAsync(/* connection to VS */);
+            
+            // Get the MCP service
+            var serviceReference = await _serviceBroker.GetProxyAsync<IMCPService>(
+                MCPServiceBrokerDescriptor.Descriptor);
+            
+            _serviceConnection = serviceReference;
+            _mcpService = serviceReference.Service!;
+            
+            // Initialize the connection
+            var initResult = await _mcpService.InitializeAsync(new { });
+            Console.WriteLine($"Connected to MCP service: {JsonSerializer.Serialize(initResult)}");
+        }
+
+        /// <summary>
+        /// Example method to find symbols in VS solution
+        /// </summary>
+        public async Task<object> FindSymbolsAsync(string symbolName, string? symbolKind = null)
+        {
+            if (_mcpService == null)
+                throw new InvalidOperationException("Not connected to MCP service");
+
+            var arguments = JsonSerializer.SerializeToElement(new 
+            { 
+                name = symbolName,
+                kind = symbolKind
+            });
+            
+            return await _mcpService.CallToolAsync("find_symbols", arguments);
+        }
+
+        /// <summary>
+        /// Example method to get solution projects
+        /// </summary>
+        public async Task<object> GetSolutionProjectsAsync()
+        {
+            if (_mcpService == null)
+                throw new InvalidOperationException("Not connected to MCP service");
+
+            var arguments = JsonSerializer.SerializeToElement(new { });
+            return await _mcpService.CallToolAsync("get_solution_projects", arguments);
+        }
+
+        /// <summary>
+        /// Example method to get symbol at specific location
+        /// </summary>
+        public async Task<object> GetSymbolAtLocationAsync(string filePath, int line, int column)
+        {
+            if (_mcpService == null)
+                throw new InvalidOperationException("Not connected to MCP service");
+
+            var arguments = JsonSerializer.SerializeToElement(new 
+            { 
+                filePath,
+                line,
+                column
+            });
+            
+            return await _mcpService.CallToolAsync("get_symbol_at_location", arguments);
+        }
+
+        /// <summary>
+        /// List all available resources in VS
+        /// </summary>
+        public async Task<object> ListResourcesAsync()
+        {
+            if (_mcpService == null)
+                throw new InvalidOperationException("Not connected to MCP service");
+
+            return await _mcpService.ListResourcesAsync();
+        }
+
+        /// <summary>
+        /// Read a specific resource from VS
+        /// </summary>
+        public async Task<object> ReadResourceAsync(string uri)
+        {
+            if (_mcpService == null)
+                throw new InvalidOperationException("Not connected to MCP service");
+
+            return await _mcpService.ReadResourceAsync(uri);
+        }
+
+        public void Dispose()
+        {
+            _serviceConnection?.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Example usage of the external MCP client
+    /// </summary>
+    class Program
+    {
+        static async Task Main(string[] args)
+        {
+            using var client = new ExternalMCPClient();
+            
+            try
+            {
+                // Connect to Visual Studio's MCP service
+                await client.ConnectAsync();
+                Console.WriteLine("Connected to Visual Studio MCP Service!");
+
+                // Get all projects in the solution
+                var projects = await client.GetSolutionProjectsAsync();
+                Console.WriteLine($"Projects: {JsonSerializer.Serialize(projects, new JsonSerializerOptions { WriteIndented = true })}");
+
+                // Find symbols named "Program"
+                var symbols = await client.FindSymbolsAsync("Program");
+                Console.WriteLine($"Symbols: {JsonSerializer.Serialize(symbols, new JsonSerializerOptions { WriteIndented = true })}");
+
+                // List available resources
+                var resources = await client.ListResourcesAsync();
+                Console.WriteLine($"Resources: {JsonSerializer.Serialize(resources, new JsonSerializerOptions { WriteIndented = true })}");
+
+                // Read solution information
+                var solutionInfo = await client.ReadResourceAsync("vs://solution");
+                Console.WriteLine($"Solution Info: {JsonSerializer.Serialize(solutionInfo, new JsonSerializerOptions { WriteIndented = true })}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+    }
+}

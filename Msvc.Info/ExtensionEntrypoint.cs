@@ -4,6 +4,14 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.Extensions.Logging;
 using Zerox.Info.Logging;
+using Microsoft.ServiceHub.Framework;
+using Microsoft.VisualStudio.Shell.ServiceBroker;
+using System.Threading;
+using StreamJsonRpc;
+using System.IO.Pipelines;
+using Zerox.Info.Core.Services;
+using Microsoft.ServiceHub.Framework.Services;
+using Nerdbank.Streams;
 
 namespace Msvc.Info
 {
@@ -13,6 +21,11 @@ namespace Msvc.Info
     [VisualStudioContribution]
     internal class ExtensionEntrypoint : Extension
     {
+        private IServiceBroker? _serviceBroker;
+        private ILogger<ExtensionEntrypoint>? _logger;
+        private IMCPService? _mcpService;
+        
+
         /// <inheritdoc />
         public override ExtensionConfiguration ExtensionConfiguration => new()
         {
@@ -32,7 +45,6 @@ namespace Msvc.Info
                 builder.AddConsole(); // Optional: also log to console
             });
 
-
             // Register VS services using MEF imports
             serviceCollection.AddSingleton<IVsOutputWindow>(provider =>
             {
@@ -45,6 +57,82 @@ namespace Msvc.Info
 
             // Register logger service (uses TraceSource and VS Output Window)
             serviceCollection.AddScoped<IExtensionLogger, ExtensionLogger>();
+
+            // Register path translation service
+            serviceCollection.AddSingleton<IPathTranslationService, PathTranslationService>();
+
+            // Register MCP service implementation
+            serviceCollection.AddSingleton<IMCPService, MCPServiceBrokerImpl>();
+
+            // Register the startup component
+            serviceCollection.AddSingleton<MCPServiceBrokerStartup>();
+
+        }
+
+        /// <summary>
+        /// Service broker startup task to register MCP service
+        /// </summary>
+        [VisualStudioContribution]
+        internal class MCPServiceBrokerStartup : ExtensionPart
+        {
+            private readonly IMCPService _mcpService;
+            private readonly ILogger<MCPServiceBrokerStartup> _logger;
+
+            public MCPServiceBrokerStartup(
+                IMCPService mcpService,
+                ILogger<MCPServiceBrokerStartup> logger)
+            {
+                _mcpService = mcpService;
+                _logger = logger;
+            }
+
+            protected override async Task InitializeAsync(CancellationToken cancellationToken)
+            {
+                await base.InitializeAsync(cancellationToken);
+
+                try
+                {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+
+                    // Get the global service broker container
+                    var serviceBrokerContainer = await AsyncServiceProvider.GlobalProvider.GetServiceAsync<SVsBrokeredServiceContainer, IBrokeredServiceContainer>();
+
+                    if (serviceBrokerContainer == null)
+                    {
+                        _logger.LogError("Could not get SVsBrokeredServiceContainer service");
+                        return;
+                    }
+
+                    // Register our service using the Proffer method with correct signature
+                    var profferedService = serviceBrokerContainer.Proffer(
+                        MCPServiceBrokerDescriptor.Descriptor,
+                        (ServiceMoniker moniker, ServiceActivationOptions options, IServiceBroker serviceBroker, AuthorizationServiceClient authorizationService, CancellationToken cancellationToken) =>
+                        {
+                            _logger.LogInformation("Creating MCP service instance for {Moniker}", moniker);
+
+                            // Create a pipe pair for communication
+                            var (clientPipe, serverPipe) = FullDuplexStream.CreatePair();
+
+                            // Create JSON-RPC target with our service implementation
+                            var rpcTarget = new MCPServiceRpcTarget(_mcpService);
+                            var jsonRpc = JsonRpc.Attach(serverPipe, rpcTarget);
+
+                            // Start the JSON-RPC connection
+                            jsonRpc.StartListening();
+
+                            // Return the client side of the pipe
+                            return new ValueTask<object?>(clientPipe);
+                        });
+
+                    _logger.LogInformation("MCP Service proffered with Service Broker at {Moniker}", MCPServiceBrokerDescriptor.Moniker);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to proffer MCP service with Service Broker");
+                    throw;
+                }
+            }
+
         }
     }
 }
