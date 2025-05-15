@@ -4,6 +4,11 @@
 
 We're developing a Visual Studio extension that implements a Model Context Protocol (MCP) server to bridge Visual Studio's project system with AI assistants. The extension uses Visual Studio's Service Broker (JSON-RPC 2.0) for communication.
 
+### Important Technical Constraints
+- Target framework: .NET Framework 4.8
+- Using modern VS extensibility SDK (Microsoft.VisualStudio.Extensibility.Sdk)
+- In-process extension (VssdkCompatibleExtension=true)
+
 ### Current Status
 
 1. **Project Structure Reorganization**

@@ -17,8 +17,16 @@ namespace Msvc.Info
     [VisualStudioContribution]
     internal class TestMCPServiceCommand : Command
     {
+        private ILogger<ShowMCPServiceStatusCommand>? _logger;
+
+        public TestMCPServiceCommand(IServiceProvider serviceProvider)
+        {
+            _logger = serviceProvider.GetService<ILogger<ShowMCPServiceStatusCommand>>()
+                      ?? throw new ArgumentNullException(nameof(serviceProvider));
+        }
+
         /// <inheritdoc />
-        public override CommandConfiguration CommandConfiguration => new("Test MCP Service")
+        public override CommandConfiguration CommandConfiguration => new("%TestMCPService%")
         {
             Icon = new("KnownMonikers.Test", IconSettings.IconAndText),
             Placements = [CommandPlacement.KnownPlacements.ToolsMenu]
@@ -27,49 +35,63 @@ namespace Msvc.Info
         /// <inheritdoc />
         public override async Task ExecuteCommandAsync(IClientContext context, CancellationToken cancellationToken)
         {
-            var logger = this.Extensibility.ServiceCollection.GetService<ILogger<TestMCPServiceCommand>>();
-            logger?.LogInformation("Testing MCP Service Broker...");
+            _logger?.LogInformation("Testing MCP Service Broker...");
 
             try
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-                
+
                 // Get service broker
                 var serviceBrokerContainer = await AsyncServiceProvider.GlobalProvider.GetServiceAsync<SVsBrokeredServiceContainer, IBrokeredServiceContainer>();
                 var serviceBroker = serviceBrokerContainer?.GetFullAccessServiceBroker();
-                
+
                 if (serviceBroker == null)
                 {
-                    await context.ShowPromptAsync("Service Broker not available", PromptOptions.OK, cancellationToken);
+                    await this.Extensibility.Shell().ShowPromptAsync(
+                        "Service Broker not available",
+                        PromptOptions.OK,
+                        cancellationToken);
                     return;
                 }
 
-                // Connect to MCP service
-                using var mcpProxy = await MCPServiceProxy.CreateAsync(serviceBroker, cancellationToken);
+                // Connect to MCP service via Service Broker's proxy
+                using var mcpService = await serviceBroker.GetProxyAsync<IMCPService>(
+                    MCPServiceDescriptor.Descriptor,
+                    cancellationToken: cancellationToken);
 
-                // Test initialize
-                var initResult = await mcpProxy.InitializeAsync(new { }, cancellationToken);
-                logger?.LogInformation("Initialize result: {Result}", JsonSerializer.Serialize(initResult));
+                if (mcpService != null)
+                {
+                    // Test initialize
+                    var initResult = await mcpService.InitializeAsync(new { }, cancellationToken);
+                    _logger?.LogInformation("Initialize result: {Result}", JsonSerializer.Serialize(initResult));
 
-                // Test list tools
-                var toolsResult = await mcpProxy.ListToolsAsync(cancellationToken);
-                logger?.LogInformation("Tools result: {Result}", JsonSerializer.Serialize(toolsResult));
+                    // Test list tools
+                    var toolsResult = await mcpService.ListToolsAsync(cancellationToken);
+                    _logger?.LogInformation("Tools result: {Result}", JsonSerializer.Serialize(toolsResult));
 
-                // Test get solution projects
-                var projectsArgs = JsonSerializer.SerializeToElement(new { });
-                var projectsResult = await mcpProxy.CallToolAsync("get_solution_projects", projectsArgs, cancellationToken);
-                logger?.LogInformation("Projects result: {Result}", JsonSerializer.Serialize(projectsResult));
+                    // Test get solution projects
+                    var projectsArgs = JsonSerializer.SerializeToElement(new { });
+                    var projectsResult = await mcpService.CallToolAsync("get_solution_projects", projectsArgs, cancellationToken);
+                    _logger?.LogInformation("Projects result: {Result}", JsonSerializer.Serialize(projectsResult));
 
-                await context.ShowPromptAsync(
-                    $"MCP Service Broker test completed successfully!\n\n" +
-                    $"Check the output window for detailed results.",
-                    PromptOptions.OK,
-                    cancellationToken);
+                    await this.Extensibility.Shell().ShowPromptAsync(
+                        $"MCP Service Broker test completed successfully!\n\n" +
+                        $"Check the output window for detailed results.",
+                        PromptOptions.OK,
+                        cancellationToken);
+                }
+                else
+                {
+                    await this.Extensibility.Shell().ShowPromptAsync(
+                        "MCP Service is not available. Please check logs for errors.",
+                        PromptOptions.OK,
+                        cancellationToken);
+                }
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "MCP Service Broker test failed");
-                await context.ShowPromptAsync(
+                _logger?.LogError(ex, "MCP Service Broker test failed");
+                await this.Extensibility.Shell().ShowPromptAsync(
                     $"MCP Service Broker test failed:\n{ex.Message}",
                     PromptOptions.OK,
                     cancellationToken);
@@ -83,8 +105,16 @@ namespace Msvc.Info
     [VisualStudioContribution]
     internal class ShowMCPServiceStatusCommand : Command
     {
+        private ILogger<ShowMCPServiceStatusCommand>? _logger; 
+
+        public ShowMCPServiceStatusCommand(IServiceProvider serviceProvider)
+        {
+            _logger = serviceProvider.GetService<ILogger<ShowMCPServiceStatusCommand>>()
+                      ?? throw new ArgumentNullException(nameof(serviceProvider));
+        }
+
         /// <inheritdoc />
-        public override CommandConfiguration CommandConfiguration => new("Show MCP Service Status")
+        public override CommandConfiguration CommandConfiguration => new("%ShowMCPServiceStatus%")
         {
             Icon = new("KnownMonikers.StatusInformation", IconSettings.IconAndText),
             Placements = [CommandPlacement.KnownPlacements.ToolsMenu]
@@ -93,8 +123,7 @@ namespace Msvc.Info
         /// <inheritdoc />
         public override async Task ExecuteCommandAsync(IClientContext context, CancellationToken cancellationToken)
         {
-            var logger = this.Extensibility.ServiceCollection.GetService<ILogger<ShowMCPServiceStatusCommand>>();
-            logger?.LogInformation("Checking MCP Service status...");
+            _logger?.LogInformation("Checking MCP Service status...");
 
             try
             {
@@ -106,51 +135,54 @@ namespace Msvc.Info
                 
                 if (serviceBroker == null)
                 {
-                    await context.ShowPromptAsync("Service Broker not available", PromptOptions.OK, cancellationToken);
+                    await this.Extensibility.Shell().ShowPromptAsync(
+                        "Service Broker not available", 
+                        PromptOptions.OK,
+                        cancellationToken);
                     return;
                 }
 
-                // Check if service is available
-                var availableServices = await serviceBroker.GetAvailableServicesAsync(cancellationToken);
-                var mcpServiceAvailable = availableServices.Any(s => s.Equals(MCPServiceBrokerDescriptor.Moniker));
 
-                if (mcpServiceAvailable)
+                // Try to connect and get info
+                try
                 {
-                    // Try to connect and get info
-                    try
+                    using var mcpService = await serviceBroker.GetProxyAsync<IMCPService>(
+                        MCPServiceDescriptor.Descriptor,
+                        cancellationToken: cancellationToken);
+
+                    if (mcpService != null)
                     {
-                        using var mcpProxy = await MCPServiceProxy.CreateAsync(serviceBroker, cancellationToken);
-                        var initResult = await mcpProxy.InitializeAsync(new { }, cancellationToken);
-                        
-                        await context.ShowPromptAsync(
+                        var initResult = await mcpService.InitializeAsync(new { }, cancellationToken);
+
+                        await this.Extensibility.Shell().ShowPromptAsync(
                             $"MCP Service Broker is running successfully!\n\n" +
-                            $"Service Moniker: {MCPServiceBrokerDescriptor.Moniker}\n" +
-                            $"Version: {MCPServiceBrokerDescriptor.Moniker.Version}\n\n" +
+                            $"Service Moniker: {MCPServiceDescriptor.Moniker}\n" +
+                            $"Version: {MCPServiceDescriptor.Moniker.Version}\n\n" +
                             $"You can now connect external MCP clients using Visual Studio's Service Broker.",
                             PromptOptions.OK,
                             cancellationToken);
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        logger?.LogError(ex, "Connected to service but failed to initialize");
-                        await context.ShowPromptAsync(
-                            $"MCP Service is registered but failed to initialize:\n{ex.Message}",
+                        await this.Extensibility.Shell().ShowPromptAsync(
+                            "MCP Service is not available. Please check logs for errors.",
                             PromptOptions.OK,
                             cancellationToken);
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    await context.ShowPromptAsync(
-                        "MCP Service is not available. Please check logs for errors.",
+                    _logger?.LogError(ex, "Connected to service but failed to initialize");
+                    await this.Extensibility.Shell().ShowPromptAsync(
+                        $"MCP Service is registered but failed to initialize:\n{ex.Message}",
                         PromptOptions.OK,
                         cancellationToken);
                 }
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "Failed to check MCP Service status");
-                await context.ShowPromptAsync(
+                _logger?.LogError(ex, "Failed to check MCP Service status");
+                await this.Extensibility.Shell().ShowPromptAsync(
                     $"Failed to check MCP Service status:\n{ex.Message}",
                     PromptOptions.OK,
                     cancellationToken);

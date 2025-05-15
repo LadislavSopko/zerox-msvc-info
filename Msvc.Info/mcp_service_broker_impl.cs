@@ -9,13 +9,14 @@ using System.Text.Json;
 using System.Runtime.Serialization;
 using StreamJsonRpc;
 using System.IO;
+using Zerox.Info.Core.Services;
 
 namespace Msvc.Info
 {
     /// <summary>
     /// MCP Service interface definition for JSON-RPC
     /// </summary>
-    public interface IMCPService
+    public interface IMCPService : IDisposable
     {
         /// <summary>
         /// Initialize the MCP service
@@ -46,15 +47,19 @@ namespace Msvc.Info
     /// <summary>
     /// Implementation of MCP Service using Visual Studio Service Broker
     /// </summary>
-    internal class MCPServiceBrokerImpl : IMCPService, IDisposable
+    internal class MCPServiceBrokerImpl : IMCPService
     {
         private readonly VisualStudioWorkspace? _workspace;
         private readonly ILogger<MCPServiceBrokerImpl> _logger;
+        private readonly IPathTranslationService _pathTranslationService;
         private readonly CancellationTokenSource _cancellationTokenSource;
 
-        public MCPServiceBrokerImpl(ILogger<MCPServiceBrokerImpl> logger)
+        public MCPServiceBrokerImpl(
+            ILogger<MCPServiceBrokerImpl> logger,
+            IPathTranslationService pathTranslationService)
         {
             _logger = logger;
+            _pathTranslationService = pathTranslationService;
             _cancellationTokenSource = new CancellationTokenSource();
             
             // Get Visual Studio workspace through Service Provider
@@ -156,6 +161,22 @@ namespace Msvc.Info
                         },
                         required = new[] { "filePath" }
                     }
+                },
+                new ToolDefinition
+                {
+                    name = "translate_path",
+                    description = "Translate a path between Windows and WSL formats",
+                    inputSchema = new InputSchema
+                    {
+                        type = "object",
+                        properties = new Dictionary<string, SchemaProperty>
+                        {
+                            ["path"] = new SchemaProperty { type = "string", description = "The path to translate" },
+                            ["sourceFormat"] = new SchemaProperty { type = "string", description = "Source format: 'Windows', 'WSL', or 'URI'" },
+                            ["targetFormat"] = new SchemaProperty { type = "string", description = "Target format: 'Windows', 'WSL', or 'URI'" }
+                        },
+                        required = new[] { "path", "sourceFormat", "targetFormat" }
+                    }
                 }
             };
 
@@ -181,6 +202,9 @@ namespace Msvc.Info
                     
                     case "get_document_outline":
                         return await GetDocumentOutlineAsync(arguments);
+                    
+                    case "translate_path":
+                        return await TranslatePathAsync(arguments);
                     
                     default:
                         _logger.LogWarning("Unknown tool: {ToolName}", toolName);
@@ -246,10 +270,14 @@ namespace Msvc.Info
                 if (uri.StartsWith("vs://solution"))
                 {
                     var solution = _workspace.CurrentSolution;
+                    
+                    // Translate paths to WSL format for AI tools
+                    var solutionPath = _pathTranslationService.TranslatePath(solution.FilePath, PathFormat.Windows, PathFormat.Wsl);
+                    
                     var solutionInfo = new
                     {
                         name = Path.GetFileNameWithoutExtension(solution.FilePath),
-                        path = solution.FilePath,
+                        path = solutionPath,
                         projects = solution.Projects.Select(p => new
                         {
                             name = p.Name,
@@ -280,16 +308,19 @@ namespace Msvc.Info
                         var project = _workspace.CurrentSolution.GetProject(ProjectId.CreateFromSerialized(projectId));
                         if (project != null)
                         {
+                            // Translate project path to WSL format
+                            var projectPath = _pathTranslationService.TranslatePath(project.FilePath, PathFormat.Windows, PathFormat.Wsl);
+                            
                             var projectInfo = new
                             {
                                 name = project.Name,
                                 language = project.Language,
-                                path = project.FilePath,
+                                path = projectPath,
                                 assemblyName = project.AssemblyName,
                                 documents = project.Documents.Select(d => new
                                 {
                                     name = d.Name,
-                                    path = d.FilePath,
+                                    path = _pathTranslationService.TranslatePath(d.FilePath, PathFormat.Windows, PathFormat.Wsl),
                                     id = d.Id.ToString()
                                 }).ToArray()
                             };
@@ -496,14 +527,18 @@ namespace Msvc.Info
                 // Get more detailed project information
                 var compilation = await project.GetCompilationAsync();
                 
+                // Translate paths to WSL format for AI tools
+                var projectPath = _pathTranslationService.TranslatePath(project.FilePath, PathFormat.Windows, PathFormat.Wsl);
+                var outputPath = _pathTranslationService.TranslatePath(project.OutputFilePath, PathFormat.Windows, PathFormat.Wsl);
+                
                 projects.Add(new
                 {
                     id = project.Id.ToString(),
                     name = project.Name,
                     language = project.Language,
-                    filePath = project.FilePath,
+                    filePath = projectPath,
                     assemblyName = project.AssemblyName,
-                    outputFilePath = project.OutputFilePath,
+                    outputFilePath = outputPath,
                     documentsCount = project.Documents.Count(),
                     analysisReferences = project.AnalyzerReferences.Count(),
                     projectReferences = project.ProjectReferences.Count(),
@@ -593,6 +628,57 @@ namespace Msvc.Info
                     }
                 }
             };
+        }
+
+        private async Task<object> TranslatePathAsync(JsonElement arguments)
+        {
+            try
+            {
+                var path = arguments.GetProperty("path").GetString();
+                var sourceFormatStr = arguments.GetProperty("sourceFormat").GetString();
+                var targetFormatStr = arguments.GetProperty("targetFormat").GetString();
+
+                if (string.IsNullOrEmpty(path))
+                {
+                    throw new ArgumentNullException(nameof(path), "Path cannot be null or empty");
+                }
+
+                if (!Enum.TryParse<PathFormat>(sourceFormatStr, true, out var sourceFormat))
+                {
+                    throw new ArgumentException($"Invalid source format: {sourceFormatStr}. Valid values are: Windows, Wsl, Uri, Auto");
+                }
+
+                if (!Enum.TryParse<PathFormat>(targetFormatStr, true, out var targetFormat))
+                {
+                    throw new ArgumentException($"Invalid target format: {targetFormatStr}. Valid values are: Windows, Wsl, Uri");
+                }
+
+                _logger.LogDebug("Translating path {Path} from {SourceFormat} to {TargetFormat}", path, sourceFormat, targetFormat);
+
+                var translatedPath = _pathTranslationService.TranslatePath(path, sourceFormat, targetFormat);
+
+                if (string.IsNullOrEmpty(translatedPath))
+                {
+                    throw new InvalidOperationException($"Failed to translate path: {path}");
+                }
+
+                return new
+                {
+                    content = new[]
+                    {
+                        new
+                        {
+                            type = "text",
+                            text = translatedPath
+                        }
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Path translation failed");
+                throw;
+            }
         }
 
         public void Dispose()

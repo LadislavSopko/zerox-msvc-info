@@ -21,11 +21,7 @@ namespace Msvc.Info
     [VisualStudioContribution]
     internal class ExtensionEntrypoint : Extension
     {
-        private IServiceBroker? _serviceBroker;
-        private ILogger<ExtensionEntrypoint>? _logger;
-        private IMCPService? _mcpService;
         
-
         /// <inheritdoc />
         public override ExtensionConfiguration ExtensionConfiguration => new()
         {
@@ -103,28 +99,15 @@ namespace Msvc.Info
                         return;
                     }
 
-                    // Register our service using the Proffer method with correct signature
-                    var profferedService = serviceBrokerContainer.Proffer(
-                        MCPServiceBrokerDescriptor.Descriptor,
-                        (ServiceMoniker moniker, ServiceActivationOptions options, IServiceBroker serviceBroker, AuthorizationServiceClient authorizationService, CancellationToken cancellationToken) =>
+                    // Register our service directly with the service broker
+                    serviceBrokerContainer.Proffer(
+                        MCPServiceDescriptor.Descriptor,
+                        (ServiceMoniker moniker, ServiceActivationOptions options, IServiceBroker broker, AuthorizationServiceClient auth, CancellationToken ct) =>
                         {
-                            _logger.LogInformation("Creating MCP service instance for {Moniker}", moniker);
-
-                            // Create a pipe pair for communication
-                            var (clientPipe, serverPipe) = FullDuplexStream.CreatePair();
-
-                            // Create JSON-RPC target with our service implementation
-                            var rpcTarget = new MCPServiceRpcTarget(_mcpService);
-                            var jsonRpc = JsonRpc.Attach(serverPipe, rpcTarget);
-
-                            // Start the JSON-RPC connection
-                            jsonRpc.StartListening();
-
-                            // Return the client side of the pipe
-                            return new ValueTask<object?>(clientPipe);
+                            return new ValueTask<object?>(_mcpService);
                         });
 
-                    _logger.LogInformation("MCP Service proffered with Service Broker at {Moniker}", MCPServiceBrokerDescriptor.Moniker);
+                    _logger.LogInformation("MCP Service proffered with Service Broker at {Moniker}", MCPServiceDescriptor.Moniker);
                 }
                 catch (Exception ex)
                 {

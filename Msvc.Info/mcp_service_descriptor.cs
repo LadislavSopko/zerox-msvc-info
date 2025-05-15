@@ -3,13 +3,14 @@ using Microsoft.VisualStudio.Shell.ServiceBroker;
 using Microsoft.ServiceHub.Framework.Services;
 using StreamJsonRpc;
 using System.Collections.Immutable;
+using Microsoft.VisualStudio.Extensibility;
 
 namespace Msvc.Info
 {
     /// <summary>
     /// Service descriptor for the MCP Service
     /// </summary>
-    internal class MCPServiceBrokerDescriptor
+    internal static class MCPServiceDescriptor
     {
         /// <summary>
         /// The moniker for the MCP service
@@ -19,16 +20,10 @@ namespace Msvc.Info
         /// <summary>
         /// Service descriptor with moniker and visibility
         /// </summary>
-        public static readonly ServiceRpcDescriptor Descriptor = new ServiceRpcDescriptor(
+        public static readonly ServiceJsonRpcDescriptor Descriptor = new ServiceJsonRpcDescriptor(
             Moniker, 
-            clientInterface: null,
-            ServiceRpcDescriptor.Formatters.MessagePack,
-            ServiceRpcDescriptor.MessageDelimiters.HttpLikeHeaders)
-        {
-            // Allow access from extensions and external processes
-            Visibility = ServiceAudience.AllClientsIncludingGuests,
-            AllowGuestClients = true
-        };
+            ServiceJsonRpcDescriptor.Formatters.UTF8,
+            ServiceJsonRpcDescriptor.MessageDelimiters.HttpLikeHeaders);
     }
 
     /// <summary>
@@ -43,10 +38,22 @@ namespace Msvc.Info
             _mcpService = mcpService;
         }
 
-        public Task<object?> CreateAsync(ServiceMoniker serviceMoniker, ServiceActivationOptions options, IServiceBroker serviceBroker, AuthorizationServiceClient? authorizationServiceClient)
+        public Task<object?> CreateAsync(ServiceActivationOptions options, CancellationToken cancellationToken)
         {
             // Return our singleton MCP service instance
             return Task.FromResult<object?>(_mcpService);
+        }
+
+        public Task<object> CreateAsync(ServiceMoniker serviceMoniker, ServiceActivationOptions activationOptions, IServiceProvider serviceProvider, AuthorizationServiceClient authorizationServiceClient, Type? instanceType, Type? interfaceType, CancellationToken cancellationToken)
+        {
+            // Return our singleton MCP service instance
+            return Task.FromResult<object>(_mcpService);
+        }
+
+        public ServiceRpcDescriptor GetServiceDescriptor(ServiceMoniker serviceMoniker)
+        {
+            // Return the service descriptor
+            return MCPServiceDescriptor.Descriptor;
         }
     }
 
@@ -98,10 +105,10 @@ namespace Msvc.Info
     /// </summary>
     internal static class MCPServiceBrokerPipeline
     {
-        public static ServiceRpcDescriptor CreateDescriptor()
+        public static ServiceJsonRpcDescriptor CreateDescriptor()
         {
-            return MCPServiceBrokerDescriptor.Descriptor
-                .WithExceptionStrategy(StreamJsonRpc.ExceptionStrategy.CommonErrorData);
+            return MCPServiceDescriptor.Descriptor
+                .WithExceptionStrategy(ExceptionProcessing.CommonErrorData);
         }
 
         public static IReadOnlyDictionary<string, object> CreateConnectionMetadata()
@@ -114,67 +121,4 @@ namespace Msvc.Info
         }
     }
 
-    /// <summary>
-    /// Simplified proxy for connecting to the MCP service
-    /// </summary>
-    public class MCPServiceProxy : IDisposable
-    {
-        private readonly IServiceBroker _serviceBroker;
-        private readonly IDisposable _serviceConnection;
-        private readonly JsonRpc _jsonRpc;
-
-        public static async Task<MCPServiceProxy> CreateAsync(IServiceBroker serviceBroker, CancellationToken cancellationToken = default)
-        {
-            // Get a pipe to the service
-            var pipe = await serviceBroker.GetPipeAsync(
-                MCPServiceBrokerDescriptor.Moniker,
-                cancellationToken: cancellationToken);
-
-            // Create JSON-RPC connection
-            var jsonRpc = JsonRpc.Attach(pipe.Item1);
-            
-            return new MCPServiceProxy(serviceBroker, pipe.Item2, jsonRpc);
-        }
-
-        private MCPServiceProxy(IServiceBroker serviceBroker, IDisposable serviceConnection, JsonRpc jsonRpc)
-        {
-            _serviceBroker = serviceBroker;
-            _serviceConnection = serviceConnection;
-            _jsonRpc = jsonRpc;
-        }
-
-        public JsonRpc JsonRpc => _jsonRpc;
-
-        // Convenient methods for MCP operations
-        public async Task<object> InitializeAsync(object parameters, CancellationToken cancellationToken = default)
-        {
-            return await _jsonRpc.InvokeAsync<object>("Initialize", new object[] { parameters }, cancellationToken);
-        }
-
-        public async Task<object> ListToolsAsync(CancellationToken cancellationToken = default)
-        {
-            return await _jsonRpc.InvokeAsync<object>("tools/list", cancellationToken);
-        }
-
-        public async Task<object> CallToolAsync(string name, System.Text.Json.JsonElement arguments, CancellationToken cancellationToken = default)
-        {
-            return await _jsonRpc.InvokeAsync<object>("tools/call", new object[] { name, arguments }, cancellationToken);
-        }
-
-        public async Task<object> ListResourcesAsync(CancellationToken cancellationToken = default)
-        {
-            return await _jsonRpc.InvokeAsync<object>("resources/list", cancellationToken);
-        }
-
-        public async Task<object> ReadResourceAsync(string uri, CancellationToken cancellationToken = default)
-        {
-            return await _jsonRpc.InvokeAsync<object>("resources/read", new object[] { uri }, cancellationToken);
-        }
-
-        public void Dispose()
-        {
-            _jsonRpc?.Dispose();
-            _serviceConnection?.Dispose();
-        }
-    }
 }

@@ -22,6 +22,8 @@ AI Tool (MCP Client) → Service Broker → VS Extension (MCP Server) → Roslyn
 - **Microsoft.VisualStudio.SDK**: Provides VS integration points
 - **Microsoft.VisualStudio.Extensibility.Sdk**: Modern VS extensibility framework
 - **In-process execution**: Full access to VS APIs without IPC overhead
+- **Target Framework**: .NET Framework 4.8
+- **VssdkCompatibleExtension**: Set to true for in-process execution
 
 ### Visual Studio Service Broker
 - **Built-in JSON-RPC 2.0 implementation**: Standardized communication protocol

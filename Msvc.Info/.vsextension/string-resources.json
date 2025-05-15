@@ -1,3 +1,5 @@
 {
-  "Msvc.Info.Command1.DisplayName": "Sample Remote Command"
+  "Msvc.Info.Command1.DisplayName": "Sample Remote Command",
+  "TestMCPService": "Test MCP Service",
+  "ShowMCPServiceStatus": "Show MCP Service Status"
 }

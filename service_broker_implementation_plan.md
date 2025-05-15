@@ -86,7 +86,7 @@ internal class MCPServiceFactory : IServiceFactory
 
 ### Step 3: Simplify the Service Registration
 
-Use the straightforward ProfferedServicesCollection approach.
+Use the direct service proffering approach for cleaner registration.
 
 **File**: `ExtensionEntrypoint.cs`
 
@@ -96,58 +96,34 @@ protected override async Task InitializeAsync(CancellationToken cancellationToke
     // Get the service broker container
     var serviceBrokerContainer = await AsyncServiceProvider.GlobalProvider.GetServiceAsync<SVsBrokeredServiceContainer, IBrokeredServiceContainer>();
     
-    // Register the service
-    var profferedServices = new ProfferedServicesCollection();
-    profferedServices.Add(MCPServiceDescriptor.Descriptor, new MCPServiceFactory(_mcpService));
-    serviceBrokerContainer.Proffer(profferedServices);
+    // Register the service directly with the service broker
+    serviceBrokerContainer.Proffer(
+        MCPServiceDescriptor.Descriptor,
+        (moniker, options, broker, cancellationToken) => 
+            new ValueTask<object?>(_mcpService));
 }
 ```
 
-### Step 4: Create a Simple Client Proxy
+### Step 4: Implement Testing Commands
 
-Make it easy for consumers to use the service.
-
-**File**: `mcp_service_descriptor.cs` (add to existing file)
-
-```csharp
-public class MCPServiceClient : IDisposable
-{
-    private readonly IServiceBroker _serviceBroker;
-    private IDisposable? _connection;
-    private JsonRpc? _rpc;
-
-    public async Task ConnectAsync(CancellationToken cancellationToken = default)
-    {
-        var result = await _serviceBroker.GetProxyAsync<JsonRpc>(MCPServiceDescriptor.Descriptor, cancellationToken);
-        _connection = result;
-        _rpc = result.Proxy;
-    }
-
-    // Service methods...
-
-    public void Dispose()
-    {
-        _connection?.Dispose();
-    }
-}
-```
-
-### Step 5: Update Commands to Use the New Client
-
-Modify test commands to use the simplified client.
+Create commands to test the MCP service through the Service Broker.
 
 **File**: `mcp_service_commands.cs`
 
 ```csharp
-// Connect to MCP service
-var client = new MCPServiceClient(serviceBroker);
-await client.ConnectAsync(cancellationToken);
+// Connect to MCP service via Service Broker's proxy
+var connectionResult = await serviceBroker.GetProxyAsync<IMCPService>(
+    MCPServiceDescriptor.Descriptor, 
+    cancellationToken: cancellationToken);
+
+using var serviceConnection = connectionResult;
+var mcpService = serviceConnection.Proxy;
 
 // Test initialize
-var initResult = await client.InitializeAsync(new { }, cancellationToken);
+var initResult = await mcpService.InitializeAsync(new { }, cancellationToken);
 ```
 
-### Step 6: Ensure Core MCP Protocol Methods
+### Step 5: Ensure Core MCP Protocol Methods
 
 Verify our implementation supports these essential MCP methods:
 
@@ -157,7 +133,7 @@ Verify our implementation supports these essential MCP methods:
 4. **resources/list**: List available solution/project resources
 5. **resources/read**: Read resource content (project info, file content)
 
-### Step 7: Add Path Translation Integration
+### Step 6: Add Path Translation Integration
 
 Ensure the Path Translation service is:
 1. Properly injected into the MCP service
