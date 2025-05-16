@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Extensibility.Commands;
 using Microsoft.VisualStudio.Extensibility.Shell;
 using Msvc.Info.Server;
+using Newtonsoft.Json;
 using System;
 using System.Text.Json;
 using System.Threading;
@@ -51,16 +52,16 @@ namespace Msvc.Info.Cmd
                     {
                         // Test initialize
                         var initResult = await mcpService.InitializeAsync(new { }, cancellationToken);
-                        _logger?.LogInformation("Initialize result: {Result}", JsonSerializer.Serialize(initResult));
+                        _logger?.LogInformation("Initialize result: {Result}", JsonConvert.SerializeObject(initResult));
 
                         // Test list tools
                         var toolsResult = await mcpService.ListToolsAsync(cancellationToken);
-                        _logger?.LogInformation("Tools result: {Result}", JsonSerializer.Serialize(toolsResult));
+                        _logger?.LogInformation("Tools result: {Result}", JsonConvert.SerializeObject(toolsResult));
 
                         // Test get solution projects
-                        var projectsArgs = JsonSerializer.SerializeToElement(new { });
+                        var projectsArgs = System.Text.Json.JsonSerializer.SerializeToElement(new { });
                         var projectsResult = await mcpService.CallToolAsync("get_solution_projects", projectsArgs, cancellationToken);
-                        _logger?.LogInformation("Projects result: {Result}", JsonSerializer.Serialize(projectsResult));
+                        _logger?.LogInformation("Projects result: {Result}", JsonConvert.SerializeObject(projectsResult));
 
                         await Extensibility.Shell().ShowPromptAsync(
                             $"MCP Service test completed successfully!\n\n" +
