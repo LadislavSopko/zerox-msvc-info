@@ -1,4 +1,4 @@
-namespace Msvc.Info
+namespace Msvc.Info.Server
 {
     /// <summary>
     /// Represents a property in a tool's schema

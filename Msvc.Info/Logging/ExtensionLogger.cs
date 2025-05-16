@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Zerox.Info.Logging
+namespace Msvc.Info.Logging
 {
     [VisualStudioContribution]
     public class ExtensionLogger : IExtensionLogger, IDisposable
@@ -77,12 +77,12 @@ namespace Zerox.Info.Logging
 
         private void WriteToOutputPane(string level, string message)
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 _pane?.OutputStringThreadSafe($"[{level}] {DateTime.Now:HH:mm:ss} - {message}\n");
                 _pane?.Activate();
-            }).FileAndForget("Log");
+            });
         }
 
         public void Dispose()

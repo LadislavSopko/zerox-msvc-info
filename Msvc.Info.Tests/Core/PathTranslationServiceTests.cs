@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Moq;
-using Zerox.Info.Core.Services;
+using Msvc.Info.Core.Services;
 
 
 namespace Msvc.Info.Tests.Core

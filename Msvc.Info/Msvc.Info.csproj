@@ -6,17 +6,21 @@
     <LangVersion>12</LangVersion>
     <UseWPF>true</UseWPF>
 
-    <RootNamespace>Zerox.Info</RootNamespace>
+    <RootNamespace>Msvc.Info</RootNamespace>
     
     <VssdkCompatibleExtension>true</VssdkCompatibleExtension>
 
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <!-- Assembly info -->
-    <PackageId>Zerox.Info</PackageId>
+    <PackageId>Msvc.Info</PackageId>
     <Description>Mcp vs extension</Description>
     <!-- /Assembly info -->
 
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,24 +28,58 @@
     <PackageReference Include="Microsoft.VisualStudio.Extensibility.Build" />
     <PackageReference Include="Microsoft.VisualStudio.SDK" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.VisualStudio.LanguageServices" />
+    
     <PackageReference Include="Microsoft.Extensions.Logging" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
 
+    <PackageReference Include="System.Threading.Tasks.Extensions"  />
 
     <!-- Service Broker and JSON-RPC packages -->
-    <PackageReference Include="Microsoft.ServiceHub.Framework" />
-    <PackageReference Include="StreamJsonRpc" />
+    <!--<PackageReference Include="Microsoft.ServiceHub.Framework" />--> 
+    <!--<PackageReference Include="StreamJsonRpc" />-->
 
     <!-- CodeAnalysis packages for symbol finding -->
-    <PackageReference Include="Microsoft.CodeAnalysis" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Common" />
+    <!--<PackageReference Include="Microsoft.CodeAnalysis" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" />-->
     
 
 
   </ItemGroup>
 
+  <!--<ItemGroup>
+    <Content Include="app.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+  </ItemGroup>-->
+
   <ItemGroup>
     <ProjectReference Include="..\Msvc.Info.Core\Msvc.Info.Core.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="$(NugetPackages)\System.Threading.Tasks.Extensions\$(TasExtensionsVer)\lib\net462\System.Threading.Tasks.Extensions.dll">
+      <Link>System.Threading.Tasks.Extensions.dll</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+  </ItemGroup>
+
+  <!-- Publish the app.config during VSIX creation -->
+  <!--<ItemGroup>
+    <VSIXSourceItem Include="app.config">
+      <VSIXSubPath>.</VSIXSubPath>
+    </VSIXSourceItem>
+    <VSIXSourceItem Include="$(OutputPath)$(AssemblyName).dll.config">
+      <VSIXSubPath>.</VSIXSubPath>
+    </VSIXSourceItem>
+  </ItemGroup>-->
+
+  <!-- Also publish it as [AssemblyName].dll.config -->
+  <!--<Target Name="CopyConfigFileToOutput" AfterTargets="Build">
+    <Copy SourceFiles="app.config" DestinationFiles="$(OutputPath)$(AssemblyName).dll.config" />
+  </Target>-->
+  
 </Project>

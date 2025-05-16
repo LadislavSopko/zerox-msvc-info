@@ -1,19 +1,26 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project>
+
+  
+  
   <ItemGroup>
 
 
-    <PackageVersion Include="Microsoft.VisualStudio.Extensibility.Sdk" Version="17.14.40254" />
-    <PackageVersion Include="Microsoft.VisualStudio.Extensibility.Build" Version="17.14.40254" />
-    <PackageVersion Include="Microsoft.VisualStudio.SDK" Version="17.14.40265"  />
+    <PackageVersion Include="Microsoft.VisualStudio.Extensibility.Sdk" Version="17.13.40008" />
+    <PackageVersion Include="Microsoft.VisualStudio.Extensibility.Build" Version="17.13.40008" />
+    <PackageVersion Include="Microsoft.VisualStudio.SDK" Version="17.6.36389"  />
     <PackageVersion Include="Microsoft.VisualStudio.LanguageServices" Version="4.13.0" />
     
-    <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.5" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="9.0.5" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="9.0.5" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
 
+    <PackageVersion Include="System.Threading.Tasks.Extensions" Version="$(TasExtensionsVer).0" />
+    
     <!-- Service Broker and JSON-RPC packages -->
-    <PackageVersion Include="Microsoft.ServiceHub.Framework" Version="4.8.55" />
+    <PackageVersion Include="Microsoft.ServiceHub.Framework" Version="4.8.3" />
     <PackageVersion Include="StreamJsonRpc" Version="2.22.11" />
 
     <!-- CodeAnalysis packages for symbol finding -->

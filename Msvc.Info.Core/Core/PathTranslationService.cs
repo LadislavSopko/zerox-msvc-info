@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using System.Text.RegularExpressions;
 
-namespace Zerox.Info.Core.Services
+namespace Msvc.Info.Core.Services
 {
 
     /// <summary>
@@ -170,7 +170,7 @@ namespace Zerox.Info.Core.Services
             string? relativePath;
             if (windowsFullPath!= null && windowsFullPath.StartsWith(baseDir, StringComparison.OrdinalIgnoreCase))
             {
-                relativePath = windowsFullPath.Substring(baseDir.Length).TrimStart('\\', '/');
+                relativePath = windowsFullPath.Substring(baseDir?.Length ?? 0).TrimStart('\\', '/');
             }
             else
             {

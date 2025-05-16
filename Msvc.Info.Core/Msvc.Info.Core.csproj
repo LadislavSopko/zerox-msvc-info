@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>$(BuildFor)</TargetFramework>
@@ -6,12 +6,12 @@
     <Nullable>enable</Nullable>
     <LangVersion>12</LangVersion>
    
-    <RootNamespace>Zerox.Info</RootNamespace>
+    <RootNamespace>Msvc.Info</RootNamespace>
 
    
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <!-- Assembly info -->
-    <PackageId>Zerox.Info.Core</PackageId>
+    <PackageId>Msvc.Info.Core</PackageId>
     <Description>Mcp vs extension</Description>
     <!-- /Assembly info -->
 

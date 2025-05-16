@@ -1,4 +1,4 @@
-namespace Zerox.Info.Core.Services
+namespace Msvc.Info.Core.Services
 {
     /// <summary>
     /// Supported path formats for translation.

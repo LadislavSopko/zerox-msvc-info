@@ -1,4 +1,4 @@
-namespace Zerox.Info.Logging
+namespace Msvc.Info.Logging
 {
     public interface IExtensionLogger
     {

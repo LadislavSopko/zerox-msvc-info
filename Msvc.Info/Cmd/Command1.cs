@@ -1,13 +1,13 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Microsoft;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Extensibility.Commands;
 using Microsoft.VisualStudio.Extensibility.Shell;
-using Zerox.Info.Logging;
+using Msvc.Info.Logging;
 
-namespace Zerox.Info.Cmd
+namespace Msvc.Info.Cmd
 {
     /// <summary>
     /// Command1 handler.
