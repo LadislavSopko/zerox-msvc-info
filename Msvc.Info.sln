@@ -19,8 +19,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1 - docs", "1 - docs", "{DF
 		.mcp.json = .mcp.json
 		CLAUDE.md = CLAUDE.md
 		http_endpoint_usage.md = http_endpoint_usage.md
-		http_transport_implementation_plan.md = http_transport_implementation_plan.md
-		service_broker_implementation_plan.md = service_broker_implementation_plan.md
+		http_transport_implementation_plan.COMPLETED.md = http_transport_implementation_plan.COMPLETED.md
+		HTTP_USAGE.md = HTTP_USAGE.md
+		service_broker_implementation_plan.COMPLETED.md = service_broker_implementation_plan.COMPLETED.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "mb", "mb", "{B7921993-A826-4111-B5E0-15E77E3C080E}"

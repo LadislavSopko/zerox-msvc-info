@@ -4,6 +4,8 @@ using Microsoft.VisualStudio.Extensibility;
 using Msvc.Info.Core.Services;
 using Msvc.Info.Logging;
 using Msvc.Info.Server;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Msvc.Info
 {
@@ -18,6 +20,11 @@ namespace Msvc.Info
         {
             RequiresInProcessHosting = true,
         };
+
+        protected override Task OnInitializedAsync(VisualStudioExtensibility extensibility, CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
 
         /// <inheritdoc />
         protected override void InitializeServices(IServiceCollection serviceCollection)
@@ -38,11 +45,14 @@ namespace Msvc.Info
             // Register path translation service
             serviceCollection.AddSingleton<IPathTranslationService, PathTranslationService>();
 
+            // Register HTTP server configuration
+            serviceCollection.AddSingleton<MCPHttpServerConfiguration>();
+            
+            // Register HTTP server
+            serviceCollection.AddSingleton<IHttpServer, MCPHttpServer>();
+
             // Proffer the MCP service with Service Broker
             serviceCollection.ProfferBrokeredService(MCPService.BrokeredServiceConfiguration, IMCPService.Configuration.ServiceDescriptor);
-
-            // Register HTTP server startup component
-            serviceCollection.AddSingleton<MCPHttpServerStartup>();
         }
     }
 }

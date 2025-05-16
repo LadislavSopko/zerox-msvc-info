@@ -1,5 +1,6 @@
 {
   "mcpServers": {
+   
     "brave-search": {
       "type": "stdio",
       "command": "npx",

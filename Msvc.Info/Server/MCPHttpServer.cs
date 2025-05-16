@@ -12,26 +12,30 @@ namespace Msvc.Info.Server
     /// <summary>
     /// HTTP server that exposes the MCP service via JSON-RPC over HTTP
     /// </summary>
-    public class MCPHttpServer : IDisposable
+    public class MCPHttpServer : IHttpServer, IDisposable
     {
-        private readonly IMCPService _mcpService;
-        private readonly ILogger _logger;
+        internal IMCPService? _mcpService = null;
+        private readonly ILogger<MCPHttpServer> _logger;
         private readonly MCPHttpServerConfiguration _configuration;
         private HttpListener? _listener;
         private CancellationTokenSource? _cancellationTokenSource;
         private Task? _listenerTask;
         private bool _disposed;
-
-        public MCPHttpServer(IMCPService mcpService, ILogger logger, MCPHttpServerConfiguration? configuration = null)
+        
+        public MCPHttpServer(ILogger<MCPHttpServer> logger, MCPHttpServerConfiguration? configuration = null)
         {
-            _mcpService = mcpService ?? throw new ArgumentNullException(nameof(mcpService));
+            //_mcpService = mcpService ?? throw new ArgumentNullException(nameof(mcpService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configuration = configuration ?? new MCPHttpServerConfiguration();
         }
 
         public string BaseUrl => _configuration.BaseUrl;
 
-        public void Start(CancellationToken cancellationToken = default)
+        public bool IsRunning => _listener?.IsListening ?? false;
+
+        public bool HasMCPService => _mcpService != null;
+
+        public void Start()
         {
             if (_listener != null)
             {
@@ -45,7 +49,7 @@ namespace Msvc.Info.Server
                 _listener.Prefixes.Add(_configuration.BaseUrl);
                 _listener.Start();
 
-                _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                _cancellationTokenSource = new CancellationTokenSource();
                 _listenerTask = AcceptRequestsAsync(_cancellationTokenSource.Token);
 
                 _logger.LogInformation("MCP HTTP server started at {BaseUrl}", BaseUrl);

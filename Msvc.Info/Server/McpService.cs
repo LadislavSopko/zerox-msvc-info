@@ -1,6 +1,7 @@
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Extensibility;
@@ -26,14 +27,18 @@ namespace Msvc.Info.Server
         private readonly VisualStudioWorkspace? _workspace;
         private readonly ILogger<MCPService> _logger;
         private readonly IPathTranslationService _pathTranslationService;
+        private IHttpServer? _httpServer = null;
+        private readonly IServiceProvider _sp;
         private bool disposedValue;
 
         public MCPService(
             ILogger<MCPService> logger,
-            IPathTranslationService pathTranslationService)
+            IPathTranslationService pathTranslationService,
+            IServiceProvider sp)
         {
             _logger = logger;
             _pathTranslationService = pathTranslationService;
+            _sp = sp;
             
             // Get Visual Studio workspace through Service Provider
             _workspace = ThreadHelper.JoinableTaskFactory.Run(async () =>
@@ -55,7 +60,32 @@ namespace Msvc.Info.Server
 
         public Task<object> InitializeAsync(object parameters, CancellationToken cancellationToken = default)
         {
+            if(_httpServer == null)
+            {
+                _httpServer = _sp.GetService<IHttpServer>();
+                // connect MCPHttpServer to this service
+                if (_httpServer is MCPHttpServer httpServer)
+                {
+                    httpServer._mcpService = this;
+                }
+            }
+
             _logger.LogInformation("MCP Service initialized by client");
+            
+            // Start HTTP server if available
+            if (_httpServer != null && !_httpServer.IsRunning)
+            {
+                try
+                {
+                    _httpServer.Start();
+                    _logger.LogInformation("HTTP server started on {BaseUrl}", _httpServer.BaseUrl);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to start HTTP server");
+                    // Don't fail initialization if HTTP server fails to start
+                }
+            }
             
             return Task.FromResult(new
             {
@@ -691,7 +721,19 @@ namespace Msvc.Info.Server
             {
                 if (disposing)
                 {
-                    // TODO: dispose managed state (managed objects)
+                    // Stop HTTP server if it's running
+                    if (_httpServer != null && _httpServer.IsRunning)
+                    {
+                        try
+                        {
+                            _httpServer.StopAsync().Wait(TimeSpan.FromSeconds(5));
+                            _logger.LogInformation("HTTP server stopped");
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error stopping HTTP server");
+                        }
+                    }
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer

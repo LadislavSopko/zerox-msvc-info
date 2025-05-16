@@ -5,13 +5,17 @@
 The MSVC MCP Server follows a modular architecture with clear separation of concerns:
 
 ```
-Extension Entry Point � Service Registration � MCP Services � Core Services
+Extension Entry Point → Service Registration → MCP Services → Core Services
+                     ↓                       ↗              ↘
+              HTTP Transport               Service Broker    Roslyn APIs
 ```
 
 ### Component Structure
 
 - **Extension Layer**: VS extension entry point, lifecycle management, VS service integration
-- **MCP Server Layer**: Protocol implementation, request handling, response formatting
+- **MCP Service Layer**: Protocol implementation, request handling, response formatting
+- **HTTP Transport Layer**: HttpListener-based server for external access
+- **Service Broker Layer**: VS native JSON-RPC communication
 - **Core Services Layer**: Reusable functionality independent of VS and MCP
 - **Test Layer**: Unit and integration tests for all components
 
@@ -52,16 +56,26 @@ Services are defined by focused interfaces representing specific responsibilitie
 
 Core functionality is encapsulated in service classes with clear responsibilities:
 - `PathTranslationService`: Handles all path format conversions
-- `McpService`: Implements MCP protocol handling
+- `MCPService`: Implements MCP protocol handling
+- `MCPHttpServer`: Provides HTTP transport for external access
 
 ## Communication Patterns
 
-### Service Broker Integration
+### Dual Transport Architecture
 
-The extension communicates with clients using VS Service Broker:
-- JSON-RPC 2.0 message format
-- Service registration for discovery
-- Proper authentication and lifecycle management
+The extension supports two communication channels:
+
+1. **VS Service Broker** (Primary):
+   - JSON-RPC 2.0 message format
+   - Service registration for discovery
+   - Native VS authentication and lifecycle management
+   - Used by VS internal tools and extensions
+
+2. **HTTP Transport** (Secondary):
+   - HttpListener on configurable port (default 3000)
+   - Same JSON-RPC 2.0 protocol
+   - No authentication (following MCP standard)
+   - Used by external tools like Claude Desktop
 
 ### Error Handling
 
