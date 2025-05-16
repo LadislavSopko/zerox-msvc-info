@@ -18,6 +18,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1 - docs", "1 - docs", "{DF
 	ProjectSection(SolutionItems) = preProject
 		.mcp.json = .mcp.json
 		CLAUDE.md = CLAUDE.md
+		http_endpoint_usage.md = http_endpoint_usage.md
+		http_transport_implementation_plan.md = http_transport_implementation_plan.md
 		service_broker_implementation_plan.md = service_broker_implementation_plan.md
 	EndProjectSection
 EndProject

@@ -32,6 +32,9 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     
+    <!-- HTTP support -->
+    <PackageReference Include="System.Net.Http" />
+    
   </ItemGroup>
 
   <ItemGroup>

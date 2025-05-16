@@ -40,6 +40,9 @@ namespace Msvc.Info
 
             // Proffer the MCP service with Service Broker
             serviceCollection.ProfferBrokeredService(MCPService.BrokeredServiceConfiguration, IMCPService.Configuration.ServiceDescriptor);
+
+            // Register HTTP server startup component
+            serviceCollection.AddSingleton<MCPHttpServerStartup>();
         }
     }
 }

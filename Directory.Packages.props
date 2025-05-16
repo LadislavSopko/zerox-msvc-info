@@ -22,6 +22,7 @@
     <!-- Service Broker and JSON-RPC packages -->
     <PackageVersion Include="Microsoft.ServiceHub.Framework" Version="4.8.3" />
     <PackageVersion Include="StreamJsonRpc" Version="2.22.11" />
+    <PackageVersion Include="System.Net.Http" Version="4.3.4" />
 
     <!-- CodeAnalysis packages for symbol finding -->
     <PackageVersion Include="Microsoft.CodeAnalysis" Version="4.13.0" />
