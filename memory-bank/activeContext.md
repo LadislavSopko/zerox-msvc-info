@@ -11,34 +11,44 @@ We're developing a Visual Studio extension that implements a Model Context Proto
 
 ### Current Status
 
-1. **Project Structure Reorganization**
-   - Created separate Msvc.Info.Core project for shared functionality
-   - Added Msvc.Info.Tests for unit tests
-   - Moved path translation services to Core project
+1. **Service Broker Implementation - COMPLETED**
+   - Implemented clean MCP service architecture following VS extensibility patterns
+   - Created IMCPService interface with static configuration
+   - Simplified MCPService implementation with BrokeredServiceConfiguration
+   - Removed unnecessary abstractions (factory, separate RPC target)
+   - Service registration using ProfferBrokeredService
+   - Test commands updated to use ServiceBroker.GetProxyAsync
 
-2. **Path Translation Implementation**
-   - Implemented bidirectional translation between Windows and WSL paths
-   - Added support for URI path formats
-   - Created unit tests for path translation functionality
-   - Added relative path calculation functionality
+2. **Core Functionality - COMPLETED**
+   - Bidirectional path translation (Windows/WSL)
+   - Solution/project introspection
+   - Symbol finding and navigation
+   - Document outline extraction
+   - Resource listing and reading
 
-3. **Service Broker Integration**
-   - Updated approach to use Visual Studio's Service Broker instead of direct TCP
-   - Benefits include better authentication, discovery, and lifecycle management
+3. **Next Phase: HTTP Transport**
+   - Add HTTP endpoint for external access
+   - Use HttpListener for simple implementation
+   - Forward JSON-RPC requests to existing MCPService
+   - No authentication required initially (based on MCP standard practice)
+
+### Architecture Insights
+
+- Visual Studio Service Broker already uses JSON-RPC 2.0
+- Our MCPService is fully JSON-RPC compliant
+- No complex bridging needed - just HTTP transport layer
+- Claude Desktop uses stdio transport without authentication
+- HTTP transport is optional for external access
 
 ### Next Steps
 
-1. **Complete MCP Service Implementation**
-   - Implement core MCP methods for solution introspection
-   - Register services with VS Service Broker
-   - Add project/solution structure querying functionality
+1. **Implement HTTP Transport**
+   - Create HttpListener-based server
+   - Route JSON-RPC requests to MCPService
+   - Configure port and startup settings
+   - Test with HTTP clients
 
-2. **Solution Structure API**
-   - Develop APIs to extract and represent solution/project structure
-   - Implement project relationship mapping
-   - Create file-to-project mapping functionality
-
-3. **Testing and Documentation**
-   - Expand test coverage
-   - Document API interfaces and usage patterns
-   - Add integration tests
+2. **Documentation**
+   - Update setup instructions
+   - Document HTTP endpoint usage
+   - Create integration examples

@@ -22,43 +22,56 @@
   - [x] Refactored into a proper service with clean interface
   - [x] Comprehensive unit test coverage
 
-- [x] **Architecture Planning**
-  - [x] Updated to use VS Service Broker instead of direct TCP
-  - [x] Defined integration pattern with VS APIs
-  - [x] Established project structure and component relationships
+- [x] **Service Broker Integration - COMPLETED**
+  - [x] Simplified architecture following VS extensibility patterns
+  - [x] Created IMCPService interface with static configuration
+  - [x] Implemented MCPService with BrokeredServiceConfiguration
+  - [x] Service registration using ProfferBrokeredService
+  - [x] Test commands using ServiceBroker.GetProxyAsync
+  - [x] Removed unnecessary abstractions
+
+- [x] **MCP Protocol Implementation**
+  - [x] Core MCP methods (initialize, listTools, callTool, etc.)
+  - [x] Solution/project introspection APIs
+  - [x] Symbol finding and navigation
+  - [x] Document outline extraction
+  - [x] Resource listing and reading
+  - [x] Full JSON-RPC 2.0 compliance
 
 ### In Progress
 
-- [ ] **MCP Service Implementation**
-  - [x] Created basic McpService class
-  - [ ] Implementing core MCP methods
-  - [ ] Integrating with VS Service Broker
-
-- [ ] **Solution/Project Access APIs**
-  - [ ] Designing solution structure representation
-  - [ ] Planning project relationship mapping
+- [ ] **HTTP Transport**
+  - [ ] HttpListener implementation
+  - [ ] JSON-RPC request routing
+  - [ ] Port configuration
+  - [ ] External access testing
 
 ### Pending Features
 
-- [ ] **Service Broker Integration**
-  - [ ] Service registration
-  - [ ] Authentication and lifecycle handling
-  - [ ] Client discovery support
+- [ ] **Enhanced Features**
+  - [ ] SSE support for streaming updates
+  - [ ] Authentication for production use
+  - [ ] Advanced configuration options
 
-- [ ] **MCP Protocol Handlers**
-  - [ ] Solution structure API
-  - [ ] Project dependency mapping
-  - [ ] File content access
-  - [ ] Command execution
-
-- [ ] **Documentation and Testing**
-  - [ ] API documentation
-  - [ ] Integration tests
-  - [ ] Usage examples
+- [ ] **Documentation**
+  - [ ] Complete API documentation
+  - [ ] Setup guides for various scenarios
+  - [ ] Integration examples
 
 ## Known Issues
 
-1. The extension is still in early development
-2. McpService implementation is minimal
-3. Service Broker integration needs to be implemented
-4. Solution/project APIs need to be designed and implemented
+1. Extension requires Visual Studio restart after installation
+2. Large solution performance optimizations needed
+3. Error handling could be more granular
+
+## Recent Changes
+
+1. **2024-01-16**: Major refactoring to simplify Service Broker integration
+   - Removed complex abstractions
+   - Aligned with standard VS extensibility patterns
+   - Fixed service registration issues
+
+2. **2024-01-16**: Completed MCP service implementation
+   - All core MCP methods implemented
+   - Full Roslyn integration for code analysis
+   - Path translation working correctly
