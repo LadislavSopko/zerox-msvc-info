@@ -1,5 +1,8 @@
 using Microsoft.ServiceHub.Framework;
+using System;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Msvc.Info.Server
 {

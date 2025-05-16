@@ -1,10 +1,12 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.ServiceHub.Framework;
 using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Extensibility.Commands;
 using Microsoft.VisualStudio.Extensibility.Shell;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.ServiceHub.Framework;
 using Msvc.Info.Server;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Msvc.Info.Cmd
 {
@@ -16,10 +18,9 @@ namespace Msvc.Info.Cmd
     {
         private ILogger<ShowMCPServiceStatusCommand>? _logger; 
 
-        public ShowMCPServiceStatusCommand(IServiceProvider serviceProvider)
+        public ShowMCPServiceStatusCommand(ILogger<ShowMCPServiceStatusCommand> logger)
         {
-            _logger = serviceProvider.GetService<ILogger<ShowMCPServiceStatusCommand>>()
-                      ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _logger = logger;
         }
 
         /// <inheritdoc />
@@ -29,18 +30,23 @@ namespace Msvc.Info.Cmd
             Placements = [CommandPlacement.KnownPlacements.ToolsMenu]
         };
 
+        public override Task InitializeAsync(CancellationToken cancellationToken)
+        {
+            return base.InitializeAsync(cancellationToken);
+        }
+
         /// <inheritdoc />
         public override async Task ExecuteCommandAsync(IClientContext context, CancellationToken cancellationToken)
         {
             _logger?.LogInformation("Checking MCP Service status...");
 
+            
+            // Use the extension's service broker
+            var mcpService = await this.Extensibility.ServiceBroker.GetProxyAsync<IMCPService>(
+                IMCPService.Configuration.ServiceDescriptor,
+                cancellationToken);
             try
             {
-                // Use the extension's service broker
-                using var mcpService = await this.Extensibility.ServiceBroker.GetProxyAsync<IMCPService>(
-                    IMCPService.Configuration.ServiceDescriptor,
-                    cancellationToken);
-
                 if (mcpService != null)
                 {
                     try
@@ -64,10 +70,7 @@ namespace Msvc.Info.Cmd
                             PromptOptions.OK,
                             cancellationToken);
                     }
-                    finally
-                    {
-                        (mcpService as IDisposable)?.Dispose();
-                    }
+
                 }
                 else
                 {
@@ -77,14 +80,11 @@ namespace Msvc.Info.Cmd
                         cancellationToken);
                 }
             }
-            catch (Exception ex)
+            finally
             {
-                _logger?.LogError(ex, "Failed to check MCP Service status");
-                await Extensibility.Shell().ShowPromptAsync(
-                    $"Failed to check MCP Service status:\n{ex.Message}",
-                    PromptOptions.OK,
-                    cancellationToken);
+                (mcpService as IDisposable)?.Dispose();
             }
+            
         }
     }
 }

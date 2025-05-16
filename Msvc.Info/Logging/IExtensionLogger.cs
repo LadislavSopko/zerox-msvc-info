@@ -1,3 +1,5 @@
+using System;
+
 namespace Msvc.Info.Logging
 {
     public interface IExtensionLogger

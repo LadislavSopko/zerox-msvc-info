@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 
-namespace Zerox.Msvc.Core.Logging
+namespace Msvc.Info.Core.Logging
 {
     
     public class TraceSourceLogger : ILogger

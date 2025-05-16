@@ -1,11 +1,11 @@
-using System.Diagnostics;
-using Microsoft;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Extensibility.Commands;
 using Microsoft.VisualStudio.Extensibility.Shell;
 using Msvc.Info.Logging;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Msvc.Info.Cmd
 {

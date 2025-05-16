@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Logging;
+using System;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace Msvc.Info.Core.Services
@@ -228,7 +230,7 @@ namespace Msvc.Info.Core.Services
             }
 
             // If no clear pattern is matched, make a best guess
-            if (path?.Contains('\\') ?? false)
+            if (path?.Contains("\\") ?? false)
             {
                 return PathFormat.Windows;
             }
